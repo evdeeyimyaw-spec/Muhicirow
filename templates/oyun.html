@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yılmaz Hub | Sayı Tahmin</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; text-align: center; padding: 40px 20px; margin: 0; }
+        .container { max-width: 500px; margin: 0 auto; background: #151515; padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #00d4ff; text-shadow: 0 0 15px rgba(0,212,255,0.3); }
+        
+        .mesaj-kutusu { margin: 25px 0; padding: 20px; border-radius: 12px; font-weight: bold; border: 2px solid; transition: 0.3s; }
+        
+        /* VS Code dostu hatasız sınıflar */
+        .mavi { color: #00d4ff; border-color: #00d4ff; background: rgba(0, 212, 255, 0.1); }
+        .sari { color: #ffcc00; border-color: #ffcc00; background: rgba(255, 204, 0, 0.1); }
+        .yesil { color: #00ff00; border-color: #00ff00; background: rgba(0, 255, 0, 0.1); }
+
+        input { padding: 15px; width: 70%; border-radius: 10px; border: 1px solid #444; background: #202020; color: white; font-size: 18px; text-align: center; outline: none; margin-bottom: 20px; }
+        button { padding: 15px 40px; background: #00d4ff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #0099cc; transform: scale(1.05); }
+        .back-link { display: block; margin-top: 30px; color: #888; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Sayı Tahmin</h1>
+        <p>1-100 arasında bir sayı tuttum.</p>
+
+        <div class="mesaj-kutusu {{ durum }}">
+            {{ mesaj }}
+        </div>
+
+        <form method="POST">
+            <input type="hidden" name="gizli_sayi" value="{{ gizli_sayi }}">
+            <input type="number" name="tahmin" placeholder="Tahminin..." required min="1" max="100" autofocus autocomplete="off">
+            <br>
+            <button type="submit">TAHMİN GÖNDER</button>
+        </form>
+
+        <a href="/" class="back-link">🏠 Ana Portala Geri Dön</a>
+    </div>
+</body>
+</html>

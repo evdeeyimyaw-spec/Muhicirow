@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Yılmaz Hub | XOX</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; }
+        .board { 
+            display: grid; grid-template-columns: repeat(3, 100px); 
+            grid-gap: 10px; justify-content: center; margin: 20px auto; 
+        }
+        .cell { 
+            width: 100px; height: 100px; background: #151515; border: 2px solid #333;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .cell:hover { border-color: #00d4ff; background: #1a1a1a; }
+        .cell.x { color: #00d4ff; text-shadow: 0 0 10px #00d4ff; }
+        .cell.o { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+        #status { font-size: 24px; margin: 20px; color: #00d4ff; }
+        button { padding: 10px 25px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .back-link { display: block; margin-top: 30px; color: #888; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>❌ XOX Oyunu ⭕</h1>
+    <div id="status">Sıra: X</div>
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <button onclick="resetGame()">Yeniden Başlat</button>
+
+    <script>
+        const statusDisplay = document.querySelector('#status');
+        let gameActive = true;
+        let currentPlayer = "X";
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Yatay
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Dikey
+            [0, 4, 8], [2, 4, 6]             // Çapraz
+        ];
+
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedCellIndex] !== "" || !gameActive) return;
+
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.innerText = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i < 8; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                    roundWon = true; break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.innerText = `Kazanan: ${currentPlayer}! 🎉`;
+                gameActive = false; return;
+            }
+
+            if (!gameState.includes("")) {
+                statusDisplay.innerText = "Berabere! 🤝";
+                gameActive = false; return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.innerText = `Sıra: ${currentPlayer}`;
+        }
+
+        function resetGame() {
+            gameActive = true;
+            currentPlayer = "X";
+            gameState = ["", "", "", "", "", "", "", "", ""];
+            statusDisplay.innerText = "Sıra: X";
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
+    </script>
+    <a href="/" class="back-link">🏠 Ana Portala Geri Dön</a>
+</body>
+</html>

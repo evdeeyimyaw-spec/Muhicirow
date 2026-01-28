@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yılmaz Portal v1.0</title>
+    <style>
+        body { background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; margin: 0; }
+        h1 { font-size: 3em; color: #00d4ff; text-shadow: 0 0 20px #00d4ff; margin-bottom: 10px; }
+        p { color: #888; margin-bottom: 50px; }
+        .container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; padding: 20px; }
+        .card {
+            background: #111; border: 1px solid #333; width: 220px; padding: 30px;
+            border-radius: 15px; cursor: pointer; transition: 0.4s; text-decoration: none; color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center;
+        }
+        .card:hover { transform: translateY(-10px); border-color: #00d4ff; box-shadow: 0 0 30px rgba(0, 212, 255, 0.4); }
+        .icon { font-size: 50px; margin-bottom: 15px; }
+        .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .desc { font-size: 13px; color: #aaa; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <h1>🚀 YILMAZ PORTAL</h1>
+    <p>Giriş yapmak istediğin sistemi seç:</p>
+    <div class="container">
+<div class="container">
+    <a href="/analiz" class="card">
+        <span class="icon">📊</span>
+        <span class="title">Analiz Merkezi</span>
+        <span class="desc">Matematiksel hesaplamalar ve veri kaydı.</span>
+    </a>
+
+    <a href="/oyun" class="card">
+        <span class="icon">🎮</span>
+        <span class="title">Sayı Tahmin</span>
+        <span class="desc">Zihnini test et, sayıyı bul!</span>
+    </a>
+
+    <a href="/tetris" class="card">
+        <span class="icon">🧱</span>
+        <span class="title">Tetris</span>
+        <span class="desc">Blokları yerleştir, satırları patlat!</span>
+    </a>
+
+    <a href="/xox" class="card">
+        <span class="icon">❌⭕</span>
+        <span class="title">XOX</span>
+        <span class="desc">Stratejini konuştur, üçlemeyi yap!</span>
+    </a>
+</div>
+    </div>
+</body>
+</html>

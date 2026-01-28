@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yılmaz Hub | Analiz Merkezi</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; text-align: center; padding: 40px 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #151515; padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #00d4ff; text-shadow: 0 0 15px rgba(0,212,255,0.3); }
+        input { padding: 15px; width: 80%; border-radius: 10px; border: 1px solid #444; background: #202020; color: white; font-size: 16px; margin-bottom: 20px; outline: none; }
+        button { padding: 15px 40px; background: #00d4ff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #0099cc; transform: scale(1.05); }
+        .results { text-align: left; background: #1e1e1e; padding: 25px; margin-top: 30px; border-radius: 15px; border-left: 6px solid #00d4ff; }
+        .res-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
+        .res-val { color: #00d4ff; font-family: monospace; font-size: 18px; }
+        .back-link { display: block; margin-top: 30px; color: #888; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Analiz Merkezi</h1>
+        <p>Sayıları virgül ile ayırarak girin.</p>
+        <form method="POST">
+            <input type="text" name="sayilar" placeholder="Örn: 10, 20, 30" required autocomplete="off">
+            <br>
+            <button type="submit">HESAPLA VE KAYDET</button>
+        </form>
+        {% if veriler %}
+            <div class="results">
+                <h3>🔍 Sonuçlar:</h3>
+                <div class="res-item"><b>Toplam:</b> <span class="res-val">{{ veriler.toplam }}</span></div>
+                <div class="res-item"><b>Ortalama:</b> <span class="res-val">{{ veriler.ortalama }}</span></div>
+                <div class="res-item"><b>Çarpım:</b> <span class="res-val">{{ veriler.carpim }}</span></div>
+                <div class="res-item"><b>Fark:</b> <span class="res-val">{{ veriler.fark }}</span></div>
+                <div class="res-item"><b>Bölüm:</b> <span class="res-val">{{ veriler.bolum }}</span></div>
+                <div class="res-item"><b>En Büyük:</b> <span class="res-val">{{ veriler.en_buyuk }}</span></div>
+                <div class="res-item"><b>En Küçük:</b> <span class="res-val">{{ veriler.en_kucuk }}</span></div>
+            </div>
+        {% endif %}
+        <a href="/" class="back-link">🏠 Ana Portala Geri Dön</a>
+    </div>
+</body>
+</html>
