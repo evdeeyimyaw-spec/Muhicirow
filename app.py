@@ -100,5 +100,39 @@ def sayi_tahmin():
         except: mesaj = "Geçerli bir sayı gir!"
     return render_template('oyun.html', mesaj=mesaj, gizli_sayi=gizli_sayi, durum=durum)
 
+# ... senin mevcut kodların (analiz_et, ana_sayfa vb.) ...
+
+@app.route('/analiz', methods=['GET', 'POST'])
+def analiz_sayfasi():
+    veriler = None
+    if request.method == 'POST':
+        raw_data = request.form.get('sayilar')
+        if raw_data:
+            try:
+                sayilar = [float(s.strip()) for s in raw_data.split(',') if s.strip()]
+                veriler = analiz_et(sayilar)
+                
+                # --- PROFESYONEL TAKİP SİSTEMİ BURADA BAŞLIYOR ---
+                user_info = f"IP: {request.remote_addr} | Cihaz: {request.headers.get('User-Agent')[:50]}..."
+                with open(LOG_FILE, "a", encoding="utf-8") as f:
+                    f.write(f"\n[{time.ctime()}] {user_info} | Veriler: {sayilar}\n")
+                # --- TAKİP SİSTEMİ BİTTİ ---
+
+            except: pass
+    return render_template('analiz.html', veriler=veriler)
+
+# --- ŞİMDİ BU GİZLİ PANELİ EN ALTA (if __name__'den önce) YAPIŞTIR ---
+
+@app.route('/admin-panel-ozel')
+def admin_panel():
+    kayitlar = []
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            kayitlar = f.readlines()[::-1] # En yeni kayıt en üstte
+    return render_template('admin.html', kayitlar=kayitlar)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 if __name__ == '__main__':
     app.run(debug=True)
