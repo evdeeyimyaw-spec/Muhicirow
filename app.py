@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import time
 import os
 import random
@@ -12,22 +12,15 @@ LOG_FILE = os.path.join(BASE_DIR, "analiz_merkezi.txt")
 # --- GELİŞMİŞ ANALİZ MOTORU ---
 def analiz_et(sayilar):
     if not sayilar: return None
-    
     toplam = sum(sayilar)
     ortalama = round(toplam / len(sayilar), 2)
     en_buyuk = max(sayilar)
     en_kucuk = min(sayilar)
-    
-    # Çarpım hesaplama
     carpim = 1
     for s in sayilar: carpim *= s
-    
-    # Fark (1. sayıdan diğerlerini çıkarır)
     fark = sayilar[0]
     if len(sayilar) > 1:
         for s in sayilar[1:]: fark -= s
-            
-    # Bölüm (1. sayıyı diğerlerine böler)
     bolum = sayilar[0]
     if len(sayilar) > 1:
         try:
@@ -38,24 +31,60 @@ def analiz_et(sayilar):
                 bolum /= s
             if isinstance(bolum, float): bolum = round(bolum, 4)
         except: bolum = "Hata"
-    
     return {
         "toplam": toplam, "ortalama": ortalama, "en_buyuk": en_buyuk,
         "en_kucuk": en_kucuk, "carpim": carpim, "fark": fark, "bolum": bolum
     }
 
-# --- ROTALAR ---
+# --- OYUN ZEKASI (YENİ EKLENEN KISIM) ---
+def kazanma_kontrol(tahta, oyuncu):
+    # Olası kazanma kombinasyonları
+    kombinasyonlar = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], # Yatay
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], # Dikey
+        [0, 4, 8], [2, 4, 6]             # Çapraz
+    ]
+    for a, b, c in kombinasyonlar:
+        if tahta[a] == oyuncu and tahta[b] == oyuncu and tahta[c] == "":
+            return c
+        if tahta[a] == oyuncu and tahta[c] == oyuncu and tahta[b] == "":
+            return b
+        if tahta[b] == oyuncu and tahta[c] == oyuncu and tahta[a] == "":
+            return a
+    return None
 
 @app.route('/pc_hamle', methods=['POST'])
 def pc_hamle():
-    tahta = request.json.get('tahta') # Mevcut tahta durumu
-    bos_kareler = [i for i, x in enumerate(tahta) if x == ""]
-    
-    if bos_kareler:
-        secilen_kare = random.choice(bos_kareler)
-        return {"hamle": secilen_kare}
-    return {"hamle": None}
+    data = request.json
+    tahta = data.get('tahta')
+    zorluk = data.get('zorluk') # 'kolay' veya 'zor'
 
+    bos_yerler = [i for i, x in enumerate(tahta) if x == ""]
+    
+    if not bos_yerler:
+        return jsonify({"hamle": None})
+
+    secilen = None
+
+    if zorluk == 'zor':
+        # 1. Bilgisayar kazanabiliyor mu? (O)
+        secilen = kazanma_kontrol(tahta, "O")
+        
+        # 2. Oyuncu kazanmak üzere mi? Engelle! (X)
+        if secilen is None:
+            secilen = kazanma_kontrol(tahta, "X")
+        
+        # 3. Merkez boşsa al (Stratejik hamle)
+        if secilen is None and 4 in bos_yerler:
+            secilen = 4
+
+    # Eğer zor modda hamle bulamadıysa veya kolaysa rastgele seç
+    if secilen is None:
+        secilen = random.choice(bos_yerler)
+
+    return jsonify({"hamle": secilen})
+
+# --- ROTALAR ---
 @app.route('/')
 def ana_sayfa():
     return render_template('ana_sayfa.html')
@@ -77,7 +106,6 @@ def analiz_sayfasi():
             try:
                 sayilar = [float(s.strip()) for s in raw_data.split(',') if s.strip()]
                 veriler = analiz_et(sayilar)
-                # Kayıt işlemi
                 with open(LOG_FILE, "a", encoding="utf-8") as f:
                     f.write(f"\n[{time.ctime()}] Veriler: {sayilar} -> Sonuçlar: {veriler}\n")
             except: pass
@@ -86,7 +114,7 @@ def analiz_sayfasi():
 @app.route('/oyun', methods=['GET', 'POST'])
 def sayi_tahmin():
     mesaj = "1-100 arası bir sayı tuttum. Tahmin et!"
-    durum = "mavi" # CSS sınıfı için (mavi, sari, yesil)
+    durum = "mavi"
     gizli_sayi = random.randint(1, 100)
 
     if request.method == 'POST':
@@ -101,9 +129,9 @@ def sayi_tahmin():
                 mesaj = f"{tahmin} çok yüksek! Daha DÜŞÜK bir sayı söyle. ⬇️"
                 durum = "sari"
             else:
-                mesaj = "TEBRİKLER! 🎉 Sayıyı doğru bildin. Yeni bir sayı tuttum!"
+                mesaj = "TEBRİKLER! 🎉 Sayıyı doğru bildin."
                 durum = "yesil"
-                gizli_sayi = random.randint(1, 100) # Kazanınca yeni sayı
+                gizli_sayi = random.randint(1, 100)
         except:
             mesaj = "Lütfen geçerli bir sayı gir!"
             durum = "sari"
@@ -112,17 +140,3 @@ def sayi_tahmin():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-@app.route('/pc_hamle', methods=['POST'])
-def pc_hamle():
-    data = request.json
-    tahta = data.get('tahta')
-    
-    import random
-    # Boş hücreleri bul (X veya O olmayanlar)
-    bos_yerler = [i for i, x in enumerate(tahta) if x == "" or x == None]
-    
-    if bos_yerler:
-        secilen = random.choice(bos_yerler)
-        return {"hamle": secilen}
-    return {"hamle": None}

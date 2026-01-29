@@ -18,20 +18,31 @@
         .cell.x { color: #00d4ff; text-shadow: 0 0 10px #00d4ff; }
         .cell.o { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
         #status { font-size: 24px; margin: 20px; color: #00d4ff; }
-        button { padding: 10px 25px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        .controls { margin: 20px; padding: 10px; background: #151515; display: inline-block; border-radius: 10px; border: 1px solid #333; }
+        select { padding: 5px; background: #333; color: white; border: none; border-radius: 5px; }
+        button { padding: 10px 25px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; }
+        button:hover { background: #00b8e6; }
+        
         .back-link { display: block; margin-top: 30px; color: #888; text-decoration: none; }
     </style>
 </head>
 <body>
-    <div style="margin: 10px; color: white;">
-    <input type="checkbox" id="vsPC"> 🤖 Bilgisayara Karşı Oyna
-</div>
     <h1>❌ XOX Oyunu ⭕</h1>
+    
+    <div class="controls">
+        <label>
+            <input type="checkbox" id="vsPC"> 🤖 Bilgisayara Karşı Oyna
+        </label>
+        <select id="difficulty">
+            <option value="kolay">Kolay Mod</option>
+            <option value="zor">Zor Mod (Düşünen)</option>
+        </select>
+    </div>
+
     <div id="status">Sıra: X</div>
+    
     <div class="board" id="board">
-        <div style="text-align: center; margin-bottom: 10px; color: white;">
-    <label><input type="checkbox" id="vsPC"> 🤖 Bilgisayara Karşı Oyna</label>
-</div>
         <div class="cell" data-index="0"></div>
         <div class="cell" data-index="1"></div>
         <div class="cell" data-index="2"></div>
@@ -42,31 +53,75 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
     </div>
+    
     <button onclick="resetGame()">Yeniden Başlat</button>
 
     <script>
         const statusDisplay = document.querySelector('#status');
+        const vsPCCheckbox = document.getElementById('vsPC');
+        const difficultySelect = document.getElementById('difficulty');
+        
         let gameActive = true;
         let currentPlayer = "X";
         let gameState = ["", "", "", "", "", "", "", "", ""];
+        let isProcessing = false; // Bilgisayar düşünürken tıklamayı engellemek için
 
         const winningConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Yatay
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Dikey
-            [0, 4, 8], [2, 4, 6]             // Çapraz
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
         ];
 
-        function handleCellClick(clickedCellEvent) {
+        async function handleCellClick(clickedCellEvent) {
             const clickedCell = clickedCellEvent.target;
             const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
 
-            if (gameState[clickedCellIndex] !== "" || !gameActive) return;
+            // Oyun bittiyse, kare doluysa veya PC düşünüyorsa işlem yapma
+            if (gameState[clickedCellIndex] !== "" || !gameActive || isProcessing) return;
 
-            gameState[clickedCellIndex] = currentPlayer;
-            clickedCell.innerText = currentPlayer;
-            clickedCell.classList.add(currentPlayer.toLowerCase());
+            makeMove(clickedCell, clickedCellIndex, currentPlayer);
+            
+            if (gameActive && vsPCCheckbox.checked && currentPlayer === "O") {
+                await playComputer();
+            }
+        }
 
+        function makeMove(cell, index, player) {
+            gameState[index] = player;
+            cell.innerText = player;
+            cell.classList.add(player.toLowerCase());
             checkResult();
+        }
+
+        async function playComputer() {
+            isProcessing = true;
+            statusDisplay.innerText = "Bilgisayar Düşünüyor... 🤔";
+            
+            try {
+                const response = await fetch('/pc_hamle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        tahta: gameState,
+                        zorluk: difficultySelect.value 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Kısa bir gecikme ekleyelim ki çok hızlı olmasın (daha doğal dursun)
+                setTimeout(() => {
+                    if (data.hamle !== null && gameActive) {
+                        const cell = document.querySelector(`.cell[data-index='${data.hamle}']`);
+                        makeMove(cell, data.hamle, "O");
+                    }
+                    isProcessing = false;
+                }, 500);
+
+            } catch (error) {
+                console.error("Hata:", error);
+                isProcessing = false;
+            }
         }
 
         function checkResult() {
@@ -80,22 +135,25 @@
 
             if (roundWon) {
                 statusDisplay.innerText = `Kazanan: ${currentPlayer}! 🎉`;
-                gameActive = false; return;
+                gameActive = false;
+                return;
             }
 
             if (!gameState.includes("")) {
                 statusDisplay.innerText = "Berabere! 🤝";
-                gameActive = false; return;
+                gameActive = false;
+                return;
             }
 
             currentPlayer = currentPlayer === "X" ? "O" : "X";
-            statusDisplay.innerText = `Sıra: ${currentPlayer}`;
+            if (!isProcessing) statusDisplay.innerText = `Sıra: ${currentPlayer}`;
         }
 
         function resetGame() {
             gameActive = true;
             currentPlayer = "X";
             gameState = ["", "", "", "", "", "", "", "", ""];
+            isProcessing = false;
             statusDisplay.innerText = "Sıra: X";
             document.querySelectorAll('.cell').forEach(cell => {
                 cell.innerText = "";
