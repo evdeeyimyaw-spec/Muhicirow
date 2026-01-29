@@ -50,5 +50,55 @@
     </a>
 </div>
     </div>
+<hr>
+<div style="text-align: center; margin-top: 20px;">
+    <label style="font-size: 20px; cursor: pointer;">
+        <input type="checkbox" id="vsPC" style="transform: scale(1.5); margin-right: 10px;"> 
+        🤖 Bilgisayara Karşı Oyna
+    </label>
+</div>
+
+<script>
+    // Bu fonksiyonu mevcut hamle yapma mantığına entegre ediyoruz
+    // Eğer hamleYap fonksiyonun varsa içini bu mantıkla güncelle:
+    
+    const eskiHamleYap = window.hamleYap; // Eğer varsa eskiyi koru
+    
+    window.hamleYap = function(index) {
+        // 1. Oyuncu (Sen) Hamle Yaparsın
+        // (Burada senin mevcut hücre doldurma kodun çalışmalı)
+        
+        // Örnek hücre doldurma ve kontrol:
+        let cells = document.querySelectorAll('.cell');
+        if (cells[index].innerText === "") {
+            cells[index].innerText = "X";
+            cells[index].style.color = "blue";
+
+            // 2. Bilgisayar Modu Kontrolü
+            if (document.getElementById('vsPC').checked) {
+                // Tahtanın güncel halini al
+                let currentBoard = Array.from(cells).map(c => c.innerText);
+                
+                // Render'daki Python koduna sor
+                fetch('/pc_hamle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({tahta: currentBoard})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.hamle !== null && cells[data.hamle].innerText === "") {
+                        // Bilgisayar hamlesini 500ms sonra yap (daha gerçekçi durur)
+                        setTimeout(() => {
+                            cells[data.hamle].innerText = "O";
+                            cells[data.hamle].style.color = "red";
+                        }, 500);
+                    }
+                });
+            }
+        }
+    };
+</script>
+
 </body>
 </html>

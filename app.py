@@ -46,6 +46,16 @@ def analiz_et(sayilar):
 
 # --- ROTALAR ---
 
+@app.route('/pc_hamle', methods=['POST'])
+def pc_hamle():
+    tahta = request.json.get('tahta') # Mevcut tahta durumu
+    bos_kareler = [i for i, x in enumerate(tahta) if x == ""]
+    
+    if bos_kareler:
+        secilen_kare = random.choice(bos_kareler)
+        return {"hamle": secilen_kare}
+    return {"hamle": None}
+
 @app.route('/')
 def ana_sayfa():
     return render_template('ana_sayfa.html')
