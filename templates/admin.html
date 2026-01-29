@@ -1,34 +1,19 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Yılmaz Hub | Log İzleme</title>
+    <title>Yılmaz Hub | Loglar</title>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
-        .terminal { background: #000; border: 1px solid #00ff41; padding: 20px; border-radius: 5px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
-        h1 { color: #00ff41; border-bottom: 1px solid #00ff41; padding-bottom: 10px; font-size: 20px; }
-        .log-entry { margin-bottom: 10px; border-bottom: 1px solid #111; padding-bottom: 5px; font-size: 14px; }
-        .timestamp { color: #888; }
-        .btn { background: #00ff41; color: black; border: none; padding: 10px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        .back { color: #00ff41; text-decoration: none; display: block; margin-top: 20px; font-size: 12px; }
+        body { background: #000; color: #00ff41; font-family: monospace; padding: 20px; }
+        h1 { border-bottom: 1px solid #00ff41; }
+        .log { border-bottom: 1px solid #111; padding: 5px 0; }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <h1>[SİSTEM LOGLARI - CANLI TAKİP]</h1>
-        <button class="btn" onclick="location.reload()">VERİLERİ ÇEK</button>
-        
-        <div id="logs">
-            {% for line in kayitlar %}
-                <div class="log-entry">
-                    <span class="timestamp">>></span> {{ line }}
-                </div>
-            {% else %}
-                <p>Henüz sistem kaydı bulunamadı...</p>
-            {% endfor %}
-        </div>
-
-        <a href="/" class="back"> < Geri Dön</a>
-    </div>
+    <h1>🛰️ CANLI SİSTEM KAYITLARI</h1>
+    {% for line in kayitlar %}
+        <div class="log">>> {{ line }}</div>
+    {% else %}
+        <p>Henüz veri yok...</p>
+    {% endfor %}
 </body>
 </html>
