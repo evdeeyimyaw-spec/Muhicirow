@@ -112,3 +112,17 @@ def sayi_tahmin():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/pc_hamle', methods=['POST'])
+def pc_hamle():
+    data = request.json
+    tahta = data.get('tahta')
+    
+    import random
+    # Boş hücreleri bul (X veya O olmayanlar)
+    bos_yerler = [i for i, x in enumerate(tahta) if x == "" or x == None]
+    
+    if bos_yerler:
+        secilen = random.choice(bos_yerler)
+        return {"hamle": secilen}
+    return {"hamle": None}
