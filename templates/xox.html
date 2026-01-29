@@ -5,163 +5,85 @@
     <title>Yılmaz Hub | XOX</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; }
-        .board { 
-            display: grid; grid-template-columns: repeat(3, 100px); 
-            grid-gap: 10px; justify-content: center; margin: 20px auto; 
-        }
-        .cell { 
-            width: 100px; height: 100px; background: #151515; border: 2px solid #333;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 10px; justify-content: center; margin: 20px auto; }
+        .cell { width: 100px; height: 100px; background: #151515; border: 2px solid #333; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .cell:hover { border-color: #00d4ff; background: #1a1a1a; }
         .cell.x { color: #00d4ff; text-shadow: 0 0 10px #00d4ff; }
         .cell.o { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
         #status { font-size: 24px; margin: 20px; color: #00d4ff; }
-        
-        .controls { margin: 20px; padding: 10px; background: #151515; display: inline-block; border-radius: 10px; border: 1px solid #333; }
-        select { padding: 5px; background: #333; color: white; border: none; border-radius: 5px; }
-        button { padding: 10px 25px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; }
-        button:hover { background: #00b8e6; }
-        
+        .controls { margin-bottom: 20px; padding: 15px; background: #111; border-radius: 10px; display: inline-block; }
+        select { background: #222; color: white; border: 1px solid #444; padding: 5px; border-radius: 5px; }
+        button { padding: 10px 25px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .back-link { display: block; margin-top: 30px; color: #888; text-decoration: none; }
     </style>
 </head>
 <body>
     <h1>❌ XOX Oyunu ⭕</h1>
-    
     <div class="controls">
-        <label>
-            <input type="checkbox" id="vsPC"> 🤖 Bilgisayara Karşı Oyna
-        </label>
+        <label><input type="checkbox" id="vsPC"> 🤖 Bilgisayara Karşı Oyna</label>
         <select id="difficulty">
-            <option value="kolay">Kolay Mod</option>
-            <option value="zor">Zor Mod (Düşünen)</option>
+            <option value="kolay">Kolay</option>
+            <option value="zor">Zor</option>
         </select>
     </div>
-
     <div id="status">Sıra: X</div>
-    
     <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
+        <div class="cell" data-index="0"></div><div class="cell" data-index="1"></div><div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div><div class="cell" data-index="4"></div><div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div><div class="cell" data-index="7"></div><div class="cell" data-index="8"></div>
     </div>
-    
     <button onclick="resetGame()">Yeniden Başlat</button>
-
     <script>
         const statusDisplay = document.querySelector('#status');
-        const vsPCCheckbox = document.getElementById('vsPC');
-        const difficultySelect = document.getElementById('difficulty');
-        
-        let gameActive = true;
-        let currentPlayer = "X";
-        let gameState = ["", "", "", "", "", "", "", "", ""];
-        let isProcessing = false; // Bilgisayar düşünürken tıklamayı engellemek için
+        let gameActive = true, currentPlayer = "X", gameState = ["", "", "", "", "", "", "", "", ""], isThinking = false;
+        const winCon = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-        const winningConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6]
-        ];
-
-        async function handleCellClick(clickedCellEvent) {
-            const clickedCell = clickedCellEvent.target;
-            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
-
-            // Oyun bittiyse, kare doluysa veya PC düşünüyorsa işlem yapma
-            if (gameState[clickedCellIndex] !== "" || !gameActive || isProcessing) return;
-
-            makeMove(clickedCell, clickedCellIndex, currentPlayer);
-            
-            if (gameActive && vsPCCheckbox.checked && currentPlayer === "O") {
-                await playComputer();
+        async function handleCellClick(e) {
+            const idx = parseInt(e.target.getAttribute('data-index'));
+            if (gameState[idx] !== "" || !gameActive || isThinking) return;
+            makeMove(idx, "X");
+            if (gameActive && document.getElementById('vsPC').checked) {
+                isThinking = true;
+                statusDisplay.innerText = "Bilgisayar düşünüyor... 🤔";
+                const response = await fetch('/pc_hamle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tahta: gameState, zorluk: document.getElementById('difficulty').value })
+                });
+                const data = await response.json();
+                setTimeout(() => {
+                    if (data.hamle !== null && gameActive) makeMove(data.hamle, "O");
+                    isThinking = false;
+                }, 500);
             }
         }
 
-        function makeMove(cell, index, player) {
-            gameState[index] = player;
+        function makeMove(idx, player) {
+            gameState[idx] = player;
+            const cell = document.querySelector(`[data-index="${idx}"]`);
             cell.innerText = player;
             cell.classList.add(player.toLowerCase());
             checkResult();
         }
 
-        async function playComputer() {
-            isProcessing = true;
-            statusDisplay.innerText = "Bilgisayar Düşünüyor... 🤔";
-            
-            try {
-                const response = await fetch('/pc_hamle', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        tahta: gameState,
-                        zorluk: difficultySelect.value 
-                    })
-                });
-                
-                const data = await response.json();
-                
-                // Kısa bir gecikme ekleyelim ki çok hızlı olmasın (daha doğal dursun)
-                setTimeout(() => {
-                    if (data.hamle !== null && gameActive) {
-                        const cell = document.querySelector(`.cell[data-index='${data.hamle}']`);
-                        makeMove(cell, data.hamle, "O");
-                    }
-                    isProcessing = false;
-                }, 500);
-
-            } catch (error) {
-                console.error("Hata:", error);
-                isProcessing = false;
-            }
-        }
-
         function checkResult() {
-            let roundWon = false;
-            for (let i = 0; i < 8; i++) {
-                const [a, b, c] = winningConditions[i];
-                if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
-                    roundWon = true; break;
-                }
+            let win = false;
+            for (let c of winCon) {
+                if (gameState[c[0]] && gameState[c[0]] === gameState[c[1]] && gameState[c[0]] === gameState[c[2]]) win = true;
             }
-
-            if (roundWon) {
-                statusDisplay.innerText = `Kazanan: ${currentPlayer}! 🎉`;
-                gameActive = false;
-                return;
-            }
-
-            if (!gameState.includes("")) {
-                statusDisplay.innerText = "Berabere! 🤝";
-                gameActive = false;
-                return;
-            }
-
+            if (win) { statusDisplay.innerText = `Kazanan: ${currentPlayer}! 🎉`; gameActive = false; return; }
+            if (!gameState.includes("")) { statusDisplay.innerText = "Berabere! 🤝"; gameActive = false; return; }
             currentPlayer = currentPlayer === "X" ? "O" : "X";
-            if (!isProcessing) statusDisplay.innerText = `Sıra: ${currentPlayer}`;
+            statusDisplay.innerText = `Sıra: ${currentPlayer}`;
         }
 
         function resetGame() {
-            gameActive = true;
-            currentPlayer = "X";
-            gameState = ["", "", "", "", "", "", "", "", ""];
-            isProcessing = false;
+            gameActive = true; currentPlayer = "X"; isThinking = false;
+            gameState.fill("");
             statusDisplay.innerText = "Sıra: X";
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.innerText = "";
-                cell.classList.remove('x', 'o');
-            });
+            document.querySelectorAll('.cell').forEach(c => { c.innerText = ""; c.className = 'cell'; });
         }
-
-        document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
+        document.querySelectorAll('.cell').forEach(c => c.addEventListener('click', handleCellClick));
     </script>
     <a href="/" class="back-link">🏠 Ana Portala Geri Dön</a>
 </body>

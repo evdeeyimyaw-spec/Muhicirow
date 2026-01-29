@@ -36,66 +36,42 @@ def analiz_et(sayilar):
         "en_kucuk": en_kucuk, "carpim": carpim, "fark": fark, "bolum": bolum
     }
 
-# --- OYUN ZEKASI (YENİ EKLENEN KISIM) ---
+# --- XOX ZEKA SİSTEMİ ---
 def kazanma_kontrol(tahta, oyuncu):
-    # Olası kazanma kombinasyonları
-    kombinasyonlar = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], # Yatay
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], # Dikey
-        [0, 4, 8], [2, 4, 6]             # Çapraz
-    ]
-    for a, b, c in kombinasyonlar:
-        if tahta[a] == oyuncu and tahta[b] == oyuncu and tahta[c] == "":
-            return c
-        if tahta[a] == oyuncu and tahta[c] == oyuncu and tahta[b] == "":
-            return b
-        if tahta[b] == oyuncu and tahta[c] == oyuncu and tahta[a] == "":
-            return a
+    kombolar = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+    for a, b, c in kombolar:
+        if tahta[a] == oyuncu and tahta[b] == oyuncu and tahta[c] == "": return c
+        if tahta[a] == oyuncu and tahta[c] == oyuncu and tahta[b] == "": return b
+        if tahta[b] == oyuncu and tahta[c] == oyuncu and tahta[a] == "": return a
     return None
 
 @app.route('/pc_hamle', methods=['POST'])
 def pc_hamle():
     data = request.json
     tahta = data.get('tahta')
-    zorluk = data.get('zorluk') # 'kolay' veya 'zor'
-
+    zorluk = data.get('zorluk', 'kolay')
     bos_yerler = [i for i, x in enumerate(tahta) if x == ""]
     
-    if not bos_yerler:
-        return jsonify({"hamle": None})
+    if not bos_yerler: return jsonify({"hamle": None})
 
     secilen = None
-
     if zorluk == 'zor':
-        # 1. Bilgisayar kazanabiliyor mu? (O)
-        secilen = kazanma_kontrol(tahta, "O")
-        
-        # 2. Oyuncu kazanmak üzere mi? Engelle! (X)
-        if secilen is None:
-            secilen = kazanma_kontrol(tahta, "X")
-        
-        # 3. Merkez boşsa al (Stratejik hamle)
-        if secilen is None and 4 in bos_yerler:
-            secilen = 4
+        secilen = kazanma_kontrol(tahta, "O") # Bilgisayar kazanabilir mi?
+        if secilen is None: secilen = kazanma_kontrol(tahta, "X") # Oyuncuyu engelle
+        if secilen is None and 4 in bos_yerler: secilen = 4 # Merkezi al
 
-    # Eğer zor modda hamle bulamadıysa veya kolaysa rastgele seç
-    if secilen is None:
-        secilen = random.choice(bos_yerler)
-
+    if secilen is None: secilen = random.choice(bos_yerler) # Rastgele oyna
     return jsonify({"hamle": secilen})
 
 # --- ROTALAR ---
 @app.route('/')
-def ana_sayfa():
-    return render_template('ana_sayfa.html')
+def ana_sayfa(): return render_template('ana_sayfa.html')
 
 @app.route('/tetris')
-def tetris_oyunu():
-    return render_template('tetris.html')
+def tetris_oyunu(): return render_template('tetris.html')
 
 @app.route('/xox')
-def xox_oyunu():
-    return render_template('xox.html')
+def xox_oyunu(): return render_template('xox.html')
 
 @app.route('/analiz', methods=['GET', 'POST'])
 def analiz_sayfasi():
@@ -113,29 +89,15 @@ def analiz_sayfasi():
 
 @app.route('/oyun', methods=['GET', 'POST'])
 def sayi_tahmin():
-    mesaj = "1-100 arası bir sayı tuttum. Tahmin et!"
-    durum = "mavi"
-    gizli_sayi = random.randint(1, 100)
-
+    mesaj, durum, gizli_sayi = "Tahmin et!", "mavi", random.randint(1, 100)
     if request.method == 'POST':
         try:
             tahmin = int(request.form.get('tahmin'))
             gizli_sayi = int(request.form.get('gizli_sayi'))
-            
-            if tahmin < gizli_sayi:
-                mesaj = f"{tahmin} çok düşük! Daha YÜKSEK bir sayı söyle. ⬆️"
-                durum = "sari"
-            elif tahmin > gizli_sayi:
-                mesaj = f"{tahmin} çok yüksek! Daha DÜŞÜK bir sayı söyle. ⬇️"
-                durum = "sari"
-            else:
-                mesaj = "TEBRİKLER! 🎉 Sayıyı doğru bildin."
-                durum = "yesil"
-                gizli_sayi = random.randint(1, 100)
-        except:
-            mesaj = "Lütfen geçerli bir sayı gir!"
-            durum = "sari"
-
+            if tahmin < gizli_sayi: mesaj, durum = "Daha YÜKSEK! ⬆️", "sari"
+            elif tahmin > gizli_sayi: mesaj, durum = "Daha DÜŞÜK! ⬇️", "sari"
+            else: mesaj, durum, gizli_sayi = "TEBRİKLER! 🎉", "yesil", random.randint(1, 100)
+        except: mesaj = "Geçerli bir sayı gir!"
     return render_template('oyun.html', mesaj=mesaj, gizli_sayi=gizli_sayi, durum=durum)
 
 if __name__ == '__main__':
