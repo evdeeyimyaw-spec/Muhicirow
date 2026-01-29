@@ -123,16 +123,18 @@ def analiz_sayfasi():
 
 # --- ŞİMDİ BU GİZLİ PANELİ EN ALTA (if __name__'den önce) YAPIŞTIR ---
 
+# --- BURASI DOSYANIN EN SONU ---
+
+# --- BURADAN AŞAĞISI YENİ TAKİP SİSTEMİ (ESKİ KODUN ÜSTTE KALSIN) ---
+
 @app.route('/admin-panel-ozel')
 def admin_panel():
     kayitlar = []
+    # Log dosyasını okuyup admin paneline gönderiyoruz
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r", encoding="utf-8") as f:
-            kayitlar = f.readlines()[::-1] # En yeni kayıt en üstte
+            kayitlar = f.readlines()[::-1] # En yeni işlem en üstte
     return render_template('admin.html', kayitlar=kayitlar)
-
-if __name__ == '__main__':
-    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
