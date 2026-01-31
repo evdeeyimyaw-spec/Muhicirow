@@ -3,43 +3,54 @@ import time
 import os
 import random
 
+# Flask uygulamasını başlatıyoruz
 app = Flask(__name__)
 
-# --- AYARLAR VE LOG DOSYASI ---
+# --- DOSYA AYARLARI ---
+# Log dosyasının nerede oluşturulacağını kesinleştiriyoruz
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(BASE_DIR, "analiz_merkezi.txt")
 
-# --- MATEMATİK MOTORU ---
+# --- YARDIMCI FONKSİYON: ANALİZ MOTORU ---
 def analiz_et(sayilar):
     if not sayilar: return None
+    # Temel Hesaplamalar
     toplam = sum(sayilar)
     ortalama = round(toplam / len(sayilar), 2)
     en_buyuk = max(sayilar)
     en_kucuk = min(sayilar)
+    
+    # Çarpım Hesaplama
     carpim = 1
     for s in sayilar: carpim *= s
+    
+    # Fark Hesaplama
     fark = sayilar[0]
     if len(sayilar) > 1:
         for s in sayilar[1:]: fark -= s
+        
+    # Bölüm Hesaplama (Hata korumalı)
     bolum = sayilar[0]
     if len(sayilar) > 1:
         try:
             for s in sayilar[1:]:
                 if s == 0:
-                    bolum = "Sıfıra Bölme!"
+                    bolum = "Tanımsız (0'a bölme)"
                     break
                 bolum /= s
             if isinstance(bolum, float): bolum = round(bolum, 4)
         except: bolum = "Hata"
+            
     return {
         "toplam": toplam, "ortalama": ortalama, "en_buyuk": en_buyuk, 
         "en_kucuk": en_kucuk, "carpim": carpim, "fark": fark, "bolum": bolum
     }
 
-# --- SAYFA ROTALARI (ROUTES) ---
+# --- ROTALAR (SAYFALAR) ---
 
 @app.route('/')
 def ana_sayfa():
+    # Ana sayfa HTML dosyanın adı tam olarak buysa çalışır
     return render_template('ana_sayfa.html')
 
 @app.route('/tetris')
@@ -57,43 +68,60 @@ def analiz_sayfasi():
         raw_data = request.form.get('sayilar')
         if raw_data:
             try:
+                # Virgülle ayrılan sayıları temizleyip listeye çeviriyoruz
                 sayilar = [float(s.strip()) for s in raw_data.split(',') if s.strip()]
                 veriler = analiz_et(sayilar)
                 
-                # --- GİZLİ TAKİP SİSTEMİ (LOGLAMA) ---
-                user_info = f"IP: {request.remote_addr} | Cihaz: {request.headers.get('User-Agent')[:30]}..."
+                # --- BURASI TAKİP SİSTEMİ ---
+                # Kullanıcının IP'sini ve verilerini kaydediyoruz
+                ip_adresi = request.remote_addr
+                zaman = time.ctime()
                 with open(LOG_FILE, "a", encoding="utf-8") as f:
-                    f.write(f"[{time.ctime()}] {user_info} | Girilen: {sayilar}\n")
-                # -------------------------------------
-            except: pass
+                    f.write(f"[{zaman}] IP: {ip_adresi} | Girdi: {sayilar}\n")
+                # ----------------------------
+                
+            except: 
+                # Hata olursa sessizce geç, site çökmesin
+                pass
     return render_template('analiz.html', veriler=veriler)
 
 @app.route('/oyun', methods=['GET', 'POST'])
 def sayi_tahmin():
+    # Sayı tahmin oyunu mantığı
     mesaj, durum, gizli_sayi = "Tahmin et!", "mavi", random.randint(1, 100)
+    
+    # Not: Bu basit versiyonda gizli_sayi her yenilemede değişir.
+    # Sabit kalması için veritabanı gerekir ama şimdilik böyle çalışsın.
     if request.method == 'POST':
         try:
             tahmin = int(request.form.get('tahmin'))
-            gizli_sayi = int(request.form.get('gizli_sayi'))
+            gelen_gizli = request.form.get('gizli_sayi')
+            if gelen_gizli:
+                gizli_sayi = int(gelen_gizli)
+            
             if tahmin < gizli_sayi:
-                mesaj, durum = f"{tahmin} çok küçük! ⬆️", "sari"
+                mesaj, durum = f"{tahmin} daha büyük söyle! ⬆️", "sari"
             elif tahmin > gizli_sayi:
-                mesaj, durum = f"{tahmin} çok büyük! ⬇️", "sari"
+                mesaj, durum = f"{tahmin} daha küçük söyle! ⬇️", "sari"
             else:
                 mesaj, durum = f"TEBRİKLER! Sayı {gizli_sayi} idi. 🎉", "yesil"
-                gizli_sayi = random.randint(1, 100)
+                gizli_sayi = random.randint(1, 100) # Yeni sayı tut
         except: pass
+        
     return render_template('oyun.html', mesaj=mesaj, durum=durum, gizli_sayi=gizli_sayi)
 
-# --- GİZLİ KOMUTA MERKEZİ (ADMİN) ---
+# --- YENİ EKLENEN ADMIN PANELİ ---
 @app.route('/admin-panel-ozel')
 def admin_panel():
     kayitlar = []
+    # Dosya varsa oku, yoksa boş liste gönder (Hata vermez)
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r", encoding="utf-8") as f:
-            kayitlar = f.readlines()[::-1] # En yeni kayıt en üstte
+            kayitlar = f.readlines()[::-1] # Ters çevir (en yeni en üstte)
     return render_template('admin.html', kayitlar=kayitlar)
 
-# --- SİSTEM BAŞLATICI ---
+# --- KRİTİK NOKTA: UYGULAMAYI BAŞLATMA ---
+# Bu kısım dosyanın EN SONUNDA ve TEK SEFER olmalı.
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Render'da host='0.0.0.0' önemlidir, dışarıdan erişime açar.
+    app.run(host='0.0.0.0', port=10000, debug=True)

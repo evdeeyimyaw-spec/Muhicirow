@@ -1,19 +1,119 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>Yılmaz Hub | Loglar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yılmaz Hub | Komuta Merkezi</title>
     <style>
-        body { background: #000; color: #00ff41; font-family: monospace; padding: 20px; }
-        h1 { border-bottom: 1px solid #00ff41; }
-        .log { border-bottom: 1px solid #111; padding: 5px 0; }
+        /* Genel Sayfa Düzeni - Simsiyah Arka Plan */
+        body {
+            background-color: #050505;
+            color: #00ff41; /* Matrix Yeşili */
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Ana Kutu */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            background-color: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+
+        /* Başlık Alanı */
+        h1 {
+            border-bottom: 2px dashed #00ff41;
+            padding-bottom: 15px;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /* Log Listesi */
+        .log-box {
+            background-color: #000;
+            border: 1px inset #222;
+            height: 500px;
+            overflow-y: auto; /* Kaydırma çubuğu */
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        /* Her Bir Satır */
+        .log-line {
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .log-line:hover {
+            background-color: #111;
+            color: #fff;
+        }
+
+        /* Butonlar */
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+        
+        .btn-home {
+            background: #333;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
-    <h1>🛰️ CANLI SİSTEM KAYITLARI</h1>
-    {% for line in kayitlar %}
-        <div class="log">>> {{ line }}</div>
-    {% else %}
-        <p>Henüz veri yok...</p>
-    {% endfor %}
+
+    <div class="container">
+        <h1>🛰️ GİZLİ TAKİP PANELİ (LOGS)</h1>
+        
+        <div style="text-align: center; color: #666; font-size: 12px; margin-bottom: 10px;">
+            Sistem Durumu: <span style="color: #00ff41;">ONLINE</span> | Kayıtlar Anlık Çekiliyor...
+        </div>
+
+        <div class="log-box">
+            {% for line in kayitlar %}
+                <div class="log-line">
+                    <span style="color: #00d4ff;">></span> {{ line }}
+                </div>
+            {% else %}
+                <div class="log-line" style="text-align: center; color: #555;">
+                    --- Henüz kaydedilmiş bir veri hareketi yok ---
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="btn-group">
+            <a href="/" class="btn btn-home">🏠 Ana Siteye Dön</a>
+            <button class="btn" onclick="location.reload()">🔄 Verileri Yenile</button>
+        </div>
+    </div>
+
 </body>
 </html>
