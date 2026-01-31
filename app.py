@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import time
 import os
 import random
@@ -125,3 +125,43 @@ def admin_panel():
 if __name__ == '__main__':
     # Render'da host='0.0.0.0' önemlidir, dışarıdan erişime açar.
     app.run(host='0.0.0.0', port=10000, debug=True)
+
+    # --- XOX BİLGİSAYAR HAMLESİ (Burası app.py en altına gelecek) ---
+@app.route('/pc_hamle', methods=['POST'])
+def pc_hamle():
+    data = request.json
+    tahta = data.get('tahta') 
+    zorluk = data.get('zorluk')
+
+    bos_yerler = [i for i, x in enumerate(tahta) if x == ""]
+
+    if not bos_yerler:
+        return jsonify({'hamle': None})
+
+    secilen_hamle = None
+
+    if zorluk == "zor":
+        # Kazanma hamlesi
+        secilen_hamle = kazanma_kontrolu(tahta, "O", bos_yerler)
+        # Engelleme hamlesi
+        if secilen_hamle is None:
+            secilen_hamle = kazanma_kontrolu(tahta, "X", bos_yerler)
+
+    if secilen_hamle is None:
+        secilen_hamle = random.choice(bos_yerler)
+
+    return jsonify({'hamle': secilen_hamle})
+
+def kazanma_kontrolu(tahta, oyuncu, bos_yerler):
+    kombinasyonlar = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ]
+    for k in kombinasyonlar:
+        hucreler = [tahta[i] for i in k]
+        if hucreler.count(oyuncu) == 2 and hucreler.count("") == 1:
+            for indeks in k:
+                if tahta[indeks] == "":
+                    return indeks
+    return None
