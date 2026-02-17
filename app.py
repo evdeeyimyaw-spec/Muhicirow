@@ -16,7 +16,7 @@ def analiz_et(sayilar):
     if not sayilar: return None
     # Temel Hesaplamalar
     toplam = sum(sayilar)
-    ortalama = round(toplam / len(sayilar), 2)
+    ortalama = round(toplam / len(sayilar), 20)
     en_buyuk = max(sayilar)
     en_kucuk = min(sayilar)
     
@@ -100,9 +100,9 @@ def sayi_tahmin():
                 gizli_sayi = int(gelen_gizli)
             
             if tahmin < gizli_sayi:
-                mesaj, durum = f"{tahmin} daha büyük söyle! ⬆️", "sari"
+                mesaj, durum = f"{tahmin} dedin ama bu sayı tahminim olan sayıdan büyük! ⬆️", "sari"
             elif tahmin > gizli_sayi:
-                mesaj, durum = f"{tahmin} daha küçük söyle! ⬇️", "sari"
+                mesaj, durum = f"{tahmin} dedin ama bu sayı tahminim olan sayıdan küçük! ⬇️", "sari"
             else:
                 mesaj, durum = f"TEBRİKLER! Sayı {gizli_sayi} idi. 🎉", "yesil"
                 gizli_sayi = random.randint(1, 100) # Yeni sayı tut
